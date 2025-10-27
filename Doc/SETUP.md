@@ -1,6 +1,6 @@
 # Guía de Configuración del Entorno
 
-Este documento te guiará a través de la instalación de las herramientas necesarias y la configuración inicial del repositorio del proyecto.
+Este documento te guiará a través de la instalación de las herramientas necesarias y la configuración inicial del repositorio del proyecto. Corresponde a las sesiones iniciales: **Introducción** y **Repaso de Sistemas Digitales**, donde se cubren conceptos básicos de chips, arquitecturas programables y el flujo de desarrollo embebido.
 
 ## 1. Herramientas Necesarias
 
@@ -76,4 +76,8 @@ Thumbs.db
 
 ¡Listo! Tu entorno de desarrollo está preparado. Ahora puedes pasar a la siguiente sección para configurar el microcontrolador.
 
-**Siguiente Paso:** [Configuración del Proyecto con STM32CubeMX (CUBEMX_CONFIG.md)](CUBEMX_CONFIG.md)
+## Integración al Proyecto "Control de Sala"
+
+En esta etapa inicial, has configurado las herramientas necesarias para el desarrollo embebido. El proyecto "Control de Sala" se basará en STM32L4, por lo que estas herramientas serán fundamentales para todas las fases siguientes.
+
+**Siguiente Paso:** [Configuración del Proyecto con STM32CubeMX (Doc/CUBEMX_CONFIG.md)](CUBEMX_CONFIG.md)

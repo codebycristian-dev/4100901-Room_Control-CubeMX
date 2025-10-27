@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Establecer criterios claros para aplicar técnicas de optimización de **memoria**, **tiempo de ejecución** y **consumo energético** en aplicaciones embebidas, con énfasis en buenas prácticas orientadas a la arquitectura STM32L4.
+Establecer criterios claros para aplicar técnicas de optimización de **memoria**, **tiempo de ejecución** y **consumo energético** en aplicaciones embebidas, con énfasis en buenas prácticas orientadas a la arquitectura STM32L4. Corresponde a las sesiones sobre **Optimización de memorias**, **Optimización de tiempo de ejecución** y **Optimización de energía**.
 
 ---
 
@@ -151,5 +151,11 @@ Completa la siguiente tabla durante tus pruebas:
 | Consumo en actividad (mA) |       |         |        |
 
 ---
+
+## Integración al Proyecto "Control de Sala"
+
+Las técnicas de optimización serán aplicadas al proyecto final para asegurar eficiencia energética (modo STOP cuando inactivo), memoria (buffers optimizados) y tiempo de respuesta (interrupciones en lugar de polling).
+
+**Siguiente Paso:** [Sensor de Temperatura (Doc/SENSOR.md)](SENSOR.md)
 
 **Siguiente paso:** Aplica estas optimizaciones al proyecto "Room Control" y documenta tus resultados. Cada ciclo de reloj, byte y miliampere cuenta en sistemas embebidos.

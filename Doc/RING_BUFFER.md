@@ -2,7 +2,7 @@
 
 ## ¿Qué es un Buffer Circular?
 
-Un **buffer circular** o *ring buffer* es una estructura de datos en forma de cola circular, útil para almacenar datos de manera temporal, como en la recepción UART. Su ventaja es el aprovechamiento eficiente de memoria sin necesidad de mover datos.
+Un **buffer circular** o *ring buffer* es una estructura de datos en forma de cola circular, útil para almacenar datos de manera temporal, como en la recepción UART. Su ventaja es el aprovechamiento eficiente de memoria sin necesidad de mover datos. Corresponde a la sesión sobre **Librerías (Ring Buffer)**, donde se implementa como ejemplo práctico de estructuras de datos en embebidos.
 
 ![Circular_Buffer_Animation](assets/Circular_Buffer_Animation.gif)
 
@@ -160,4 +160,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 Implemente las funciones de ring_buffer.c y pruebe su funcionalidad usando la consola de PC con el USART2.
 
-**Siguiente Paso:** [Implementación de una librería para el teclado (KEYPAD.md)](KEYPAD.md)
+## Integración al Proyecto "Control de Sala"
+
+El ring buffer será utilizado para manejar la entrada UART del ESP01 y el teclado hexadecimal, permitiendo procesamiento asíncrono de datos sin pérdida de información.
+
+**Siguiente Paso:** [Implementación de una librería para el teclado (Doc/KEYPAD.md)](KEYPAD.md)

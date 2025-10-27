@@ -1,6 +1,6 @@
 # Configuración del Proyecto con STM32CubeMX
 
-En esta sección, utilizaremos la funcionalidad de STM32CubeMX para configurar los periféricos necesarios de la placa Nucleo-L476RG.
+En esta sección, utilizaremos la funcionalidad de STM32CubeMX para configurar los periféricos necesarios de la placa Nucleo-L476RG. Corresponde a la sesión sobre **Arquitecturas Programables: ARM Cortex M** y **STM32L4**, donde se cubren GPIOs, UART, NVIC, PWM, RTC y ADC.
 
 ## 1. Crear un Proyecto en STM32CubeMX
 
@@ -84,4 +84,8 @@ Ve a la pestaña **"Pinout & Configuration"**.
 
 ¡La configuración del hardware está lista! Ahora vamos a escribir la lógica de la aplicación.
 
-**Siguiente Paso:** [Lineamientos para escribir librerias (LIB_PRINCIPLES.md)](LIB_PRINCIPLES.md)
+## Integración al Proyecto "Control de Sala"
+
+Has configurado los periféricos básicos (GPIO, UART) que serán utilizados en el proyecto. En fases posteriores, expandiremos esta configuración para incluir ADC (sensor de temperatura), PWM (ventilador), I2C (display OLED) y UART adicional (ESP01).
+
+**Siguiente Paso:** [Lineamientos para escribir librerías (Doc/LIB_PRINCIPLES.md)](LIB_PRINCIPLES.md)

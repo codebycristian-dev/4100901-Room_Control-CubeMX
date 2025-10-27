@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Establecer lineamientos claros para desarrollar librerías en C que sean **modulares, reutilizables, y fáciles de mantener**, orientadas a sistemas embebidos sobre STM32.
+Establecer lineamientos claros para desarrollar librerías en C que sean **modulares, reutilizables, y fáciles de mantener**, orientadas a sistemas embebidos sobre STM32. Corresponde a la sesión sobre **Programación Estructurada**, donde se enfatiza la documentación y el diseño modular.
 
 ---
 
@@ -175,4 +175,8 @@ Este ejemplo muestra cómo integrar la librería `led_driver` dentro del archivo
 
 ---
 
-**Siguiente Paso:** [Implementación de una librería de buffer circular (RING_BUFFER.md)](RING_BUFFER.md)
+## Integración al Proyecto "Control de Sala"
+
+Los principios aquí descritos serán aplicados en todas las librerías del proyecto: LED, keypad, sensor, fan, etc. La modularidad permitirá integrar componentes fácilmente en el sistema principal.
+
+**Siguiente Paso:** [Implementación de una librería de buffer circular (Doc/RING_BUFFER.md)](RING_BUFFER.md)

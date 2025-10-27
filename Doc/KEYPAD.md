@@ -2,7 +2,7 @@
 
 ## Introducción
 
-En esta guía, implementaremos un driver para un teclado matricial de 4x4. A diferencia de un simple sondeo (polling) que consume ciclos de CPU constantemente, utilizaremos un método más eficiente y elegante: **interrupciones externas (EXTI)**.
+En esta guía, implementaremos un driver para un teclado matricial de 4x4. A diferencia de un simple sondeo (polling) que consume ciclos de CPU constantemente, utilizaremos un método más eficiente y elegante: **interrupciones externas (EXTI)**. Corresponde a la sesión sobre **Teclado**, donde se aplica el manejo de interrupciones para entrada de usuario.
 
 Configuraremos las 4 filas del teclado como salidas y las 4 columnas como entradas con interrupciones. Cuando se presiona una tecla, se conecta una fila (que mantendremos en estado **BAJO**) con una columna (en estado **ALTO** gracias a una resistencia de pull-up). Esto provoca un flanco de bajada en el pin de la columna, lo que dispara una interrupción. Solo entonces nuestro código se activará para determinar exactamente qué tecla fue presionada.
 
@@ -177,4 +177,8 @@ Tu tarea es:
    * Verificar contra clave
    * Encender/parpadear LED según resultado
 
-**Siguiente Paso:** [Uso de una libreria existente (SSD1306.md)](SSD1306.md)
+## Integración al Proyecto "Control de Sala"
+
+El teclado hexadecimal será el componente principal de entrada para el sistema de control, permitiendo al usuario ingresar comandos para ajustar temperatura, activar ventilación, etc. Se integrará con el ring buffer para manejo asíncrono.
+
+**Siguiente Paso:** [Uso de una librería existente (Doc/SSD1306.md)](SSD1306.md)
