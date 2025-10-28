@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "led_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,7 +43,15 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+led_handle_t led1 = {
+    .port = GPIOA,
+    .pin = GPIO_PIN_5
+};
+//implementacion para led externo PA7
+led_handle_t led2 = {
+    .port = GPIOA,
+    .pin = GPIO_PIN_7
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,13 +98,18 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  led_init(&led1);
+  led_init(&led2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    led_toggle(&led1);
+    HAL_Delay(500);
+    led_toggle(&led2);
+    HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
