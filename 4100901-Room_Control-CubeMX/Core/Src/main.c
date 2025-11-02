@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "led_driver.h"
+#include "ring_buffer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +53,10 @@ led_handle_t led2 = {
     .port = GPIOA,
     .pin = GPIO_PIN_7
 };
+#define UART2_RX_LEN 16
+uint8_t uart2_rx_buffer[UART2_RX_LEN];
+ring_buffer_t uart2_rx_rb;
+uint8_t uart2_rx_data; // Variable to hold received data
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,7 +69,14 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart->Instance == USART2)
+  {
+    HAL_UART_Receive_IT(&huart2, &uart2_rx_data, 1);
+    ring_buffer_write(&uart2_rx_rb, uart2_rx_data);
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -100,6 +112,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   led_init(&led1);
   led_init(&led2);
+  ring_buffer_init(&uart2_rx_rb, uart2_rx_buffer, UART2_RX_LEN);
+  HAL_UART_Receive_IT(&huart2, &uart2_rx_data, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -110,6 +124,18 @@ int main(void)
     HAL_Delay(500);
     led_toggle(&led2);
     HAL_Delay(1000);
+    if (ring_buffer_count(&uart2_rx_rb) >= 5)
+    {
+      // If there are at least 5 bytes in the ring buffer, read and process them
+      for (int i = 0; i < 5; i++)
+      {
+        if (ring_buffer_read(&uart2_rx_rb, &uart2_rx_data))
+        {
+          // Process the received data (for example, print it)
+          HAL_UART_Transmit(&huart2, &uart2_rx_data, 1, HAL_MAX_DELAY);
+        }
+      }
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
