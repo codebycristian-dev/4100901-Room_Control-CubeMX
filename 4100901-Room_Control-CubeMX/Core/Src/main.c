@@ -23,6 +23,9 @@
 /* USER CODE BEGIN Includes */
 #include "led_driver.h"
 #include "ring_buffer.h"
+#include "keypad_driver.h"
+#include "ring_buffer.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,10 +56,20 @@ led_handle_t led2 = {
     .port = GPIOA,
     .pin = GPIO_PIN_7
 };
-#define UART2_RX_LEN 16
-uint8_t uart2_rx_buffer[UART2_RX_LEN];
-ring_buffer_t uart2_rx_rb;
-uint8_t uart2_rx_data; // Variable to hold received data
+#define UART2_RX_LEN 16 // difinición del tamaño del buffer circular 
+uint8_t uart2_rx_buffer[UART2_RX_LEN]; //arreglo donde se guardan los datos recibidos
+ring_buffer_t uart2_rx_rb; // creación buffer usando la estructura del ring buffer 
+uint8_t uart2_rx_data; // Variable temporal para almacenar el dato mas reciente recibido por UART
+
+keypad_handle_t keypad = {
+    .row_ports = {KEYPAD_R1_GPIO_Port, KEYPAD_R2_GPIO_Port, KEYPAD_R3_GPIO_Port, KEYPAD_R4_GPIO_Port},
+    .row_pins = {KEYPAD_R1_Pin, KEYPAD_R2_Pin, KEYPAD_R3_Pin, KEYPAD_R4_Pin},
+    .col_ports = {KEYPAD_C1_GPIO_Port, KEYPAD_C2_GPIO_Port, KEYPAD_C3_GPIO_Port, KEYPAD_C4_GPIO_Port},
+    .col_pins = {KEYPAD_C1_Pin, KEYPAD_C2_Pin, KEYPAD_C3_Pin, KEYPAD_C4_Pin}};
+
+#define KEYPAD_BUFFER_LEN 16
+uint8_t keypad_buffer[KEYPAD_BUFFER_LEN];
+ring_buffer_t keypad_rb;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -77,6 +90,56 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     ring_buffer_write(&uart2_rx_rb, uart2_rx_data);
   }
 }
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+  char key = keypad_scan(&keypad, GPIO_Pin);
+  if (key != '\0'){
+    ring_buffer_write(&keypad_rb, (uint8_t)key);
+  }
+}
+// ---- Control de acceso ----
+static const char SECRET_PIN[4] = {'C', '0', '0', '7'}; //  clave aquí
+static char pin_input[4];
+static uint8_t pin_idx = 0;
+
+static void reset_pin_input(void)
+{
+  for (int i = 0; i < 4; ++i)
+    pin_input[i] = 0;
+  pin_idx = 0;
+}
+
+static int pin_is_correct(void)
+{
+  for (int i = 0; i < 4; ++i)
+  {
+    if (pin_input[i] != SECRET_PIN[i])
+      return 0;
+  }
+  return 1;
+}
+
+// Feedback con LEDs (bloqueante, simple)
+static void blink_ok(void)
+{ // 3 destellos rápidos en LED1
+  for (int i = 0; i < 3; ++i)
+  {
+    led_toggle(&led1);
+    HAL_Delay(120);
+    led_toggle(&led1);
+    HAL_Delay(120);
+  }
+}
+
+static void blink_error(void)
+{ // 2 destellos lentos en LED2
+  for (int i = 0; i < 2; ++i)
+  {
+    led_toggle(&led2);
+    HAL_Delay(300);
+    led_toggle(&led2);
+    HAL_Delay(300);
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -87,6 +150,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  
 
   /* USER CODE END 1 */
 
@@ -114,12 +178,46 @@ int main(void)
   led_init(&led2);
   ring_buffer_init(&uart2_rx_rb, uart2_rx_buffer, UART2_RX_LEN);
   HAL_UART_Receive_IT(&huart2, &uart2_rx_data, 1);
+  ring_buffer_init(&keypad_rb, keypad_buffer, KEYPAD_BUFFER_LEN);
+  keypad_init(&keypad);
+  printf("Sistema listo. Esperando pulsaciones del teclado...\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    uint8_t key_from_buffer;
+    if (ring_buffer_read(&keypad_rb, &key_from_buffer))
+    {
+      char k = (char)key_from_buffer;
+      printf("Tecla presionada: %c\r\n", k);
+      // printf("Tecla presionada: %c\r\n", (char)key_from_buffer);
+      //  Registrar la tecla si aún faltan cifras
+      if (pin_idx < 4)
+      {
+        pin_input[pin_idx++] = k;
+      }
+
+      // ¿Ya hay 4?
+      if (pin_idx == 4)
+      {
+        if (pin_is_correct())
+        {
+          printf("Acceso: ACEPTADO\r\n");
+          blink_ok();
+          // Aquí podrías encender un relé/LED permanente:
+          // HAL_GPIO_WritePin(GPIOX, GPIO_PIN_Y, GPIO_PIN_SET);
+        }
+        else
+        {
+          printf("Acceso: ERROR\r\n");
+          blink_error();
+        }
+        reset_pin_input(); // listo para la siguiente entrada
+      }
+    }
+    
     led_toggle(&led1);
     HAL_Delay(500);
     led_toggle(&led2);
@@ -246,22 +344,53 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LD2_Pin|LED_EXT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin|LED_EXT_Pin|KEYPAD_R1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, KEYPAD_R2_Pin|KEYPAD_R4_Pin|KEYPAD_R3_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD2_Pin LED_EXT_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin|LED_EXT_Pin;
+  /*Configure GPIO pins : LD2_Pin LED_EXT_Pin KEYPAD_R1_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin|LED_EXT_Pin|KEYPAD_R1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : KEYPAD_C1_Pin */
+  GPIO_InitStruct.Pin = KEYPAD_C1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(KEYPAD_C1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : KEYPAD_C4_Pin */
+  GPIO_InitStruct.Pin = KEYPAD_C4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(KEYPAD_C4_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : KEYPAD_C2_Pin KEYPAD_C3_Pin */
+  GPIO_InitStruct.Pin = KEYPAD_C2_Pin|KEYPAD_C3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : KEYPAD_R2_Pin KEYPAD_R4_Pin KEYPAD_R3_Pin */
+  GPIO_InitStruct.Pin = KEYPAD_R2_Pin|KEYPAD_R4_Pin|KEYPAD_R3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
@@ -271,7 +400,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+int _write(int file, char *ptr, int len)
+{
+  HAL_UART_Transmit(&huart2, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+  return len;
+}
 /* USER CODE END 4 */
 
 /**
