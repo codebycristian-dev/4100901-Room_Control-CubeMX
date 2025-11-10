@@ -82,6 +82,9 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/**
+ * @brief Callback de recepción UART (interrupción)
+ */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART2)
@@ -90,6 +93,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     ring_buffer_write(&uart2_rx_rb, uart2_rx_data);
   }
 }
+/**
+ * @brief Callback de interrupción EXTI para las columnas del keypad
+ * @param GPIO_Pin Pin que generó la interrupción
+ */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
   char key = keypad_scan(&keypad, GPIO_Pin);
   if (key != '\0'){
@@ -98,16 +105,21 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 }
 // ---- Control de acceso ----
 static const char SECRET_PIN[4] = {'C', '0', '0', '7'}; //  clave aquí
-static char pin_input[4];
-static uint8_t pin_idx = 0;
-
+static char pin_input[4]; // almacenamiento temporal del PIN introducido
+static uint8_t pin_idx = 0;// número de teclas validas introducidas
+/**
+ * @brief Reinicia la entrada del PIN
+ */
 static void reset_pin_input(void)
 {
   for (int i = 0; i < 4; ++i)
-    pin_input[i] = 0;
-  pin_idx = 0;
+    pin_input[i] = 0; //limpia el arreglo 
+  pin_idx = 0; //variable tempooral para el indice del pin 
 }
-
+/**
+ * @brief Comprueba si el PIN introducido es correcto
+ * @return 1 si es correcto, 0 si no
+ */
 static int pin_is_correct(void)
 {
   for (int i = 0; i < 4; ++i)
@@ -118,18 +130,24 @@ static int pin_is_correct(void)
   return 1;
 }
 
-// Feedback con LEDs (bloqueante, simple)
+/**
+ * @brief Parpadeo rápido en LED1 para indicar OK
+ */
 static void blink_ok(void)
-{ // 3 destellos rápidos en LED1
+{  
   for (int i = 0; i < 3; ++i)
   {
     led_toggle(&led1);
     HAL_Delay(120);
     led_toggle(&led1);
     HAL_Delay(120);
+    led_toggle(&led1);
+    HAL_Delay(120);
   }
 }
-
+/**
+ * @brief Parpadeo lento en LED2 para indicar ERROR
+ */
 static void blink_error(void)
 { // 2 destellos lentos en LED2
   for (int i = 0; i < 2; ++i)
@@ -145,6 +163,7 @@ static void blink_error(void)
 /**
   * @brief  The application entry point.
   * @retval int
+
   */
 int main(void)
 {
